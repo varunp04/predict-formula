@@ -1,0 +1,8 @@
+scikit-learn==1.2.*
+pandas==2.*
+numpy==1.*
+multi-model-server
+sagemaker-inference
+retrying
+sagemaker
+boto3
