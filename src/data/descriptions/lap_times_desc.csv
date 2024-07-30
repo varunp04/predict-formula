@@ -1,0 +1,7 @@
+feature,description
+raceId,unique id for final results
+driverId,unique id for each driver
+lap,lap count
+position,final  position of car
+time,"lap time of car in minutes, seconds and tenths of seconds"
+milliseconds,lap time of car in milliseconds

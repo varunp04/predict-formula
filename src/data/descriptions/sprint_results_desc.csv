@@ -1,0 +1,17 @@
+feature,description
+resultId,unique id for final results
+raceId,"unique id for each event (race, qualifying event, sprint)"
+driverId,unique id for each driver
+constructorId,unique id for team 
+number,car number
+grid,starting  position of car
+position,final  position of car
+positionText,final  position of car as string
+positionOrder,final  position ordering of all cars
+points,championship points accunulated by driver this season
+laps,total number of lasp completed by driver for this event
+time,"lap time of car during sprint in minutes, seconds, and tenths of seconds"
+milliseconds,lap time of car during sprint in milliseconds
+fastestLap,lap where car was fastest
+fastestLapTime,fastest lap time achieved by a car
+statusId,descriptor for a car finishing a race or reason for its early retirement

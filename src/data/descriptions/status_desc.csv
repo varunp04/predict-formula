@@ -1,0 +1,3 @@
+feature,description
+statusId,unique id for car status
+status,descriptor for whether a car finished or reason for retiring / not completing event
