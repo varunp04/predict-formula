@@ -1,19 +1,16 @@
-PROCESS_DATA_CONFIG:
-  DATA_FOLDER: data
-  FILE_NAME: iris_data.csv
 
-MODEL_ARTIFACTS_PATH_PREFIX: /opt/ml/
+DATA_FOLDER: ../data/data_files/
 
-INPUT_LOCATION: input/data/
 
-CONFIG_LOCATION: input/config/
+RACES_DF_COLUMNS: 
+  - raceId
+  - year
+  - round
+  - circuitId
+  - name
+  - date
 
-HYPERPARMETER_FILE_NAME: hyperparameters.json
-
-OUTPUT_LOCATION: output
-
-MODEL_LOCATION: model/
-
-DATA_CHECKPOINT_PATH: /data/data_checkpoints/
-
-TRAINING_CHANNEL_NAME: training
+RESULTS_DF_COLUMNS:
+  - raceId
+  - driverId
+  - number
