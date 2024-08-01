@@ -1,0 +1,8 @@
+feature,description
+raceId,unique id for final results
+year,event year
+round,round of event in championship season
+circuitId,unique id for track
+name,name of event
+date,date of event
+time,starting time of event

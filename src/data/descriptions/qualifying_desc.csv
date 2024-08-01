@@ -1,0 +1,10 @@
+feature,description
+qualifyId,unique id for each qualifying event
+raceId,"unique id for each event (race, qualifying event, sprint)"
+driverId,unique id for each driver
+constructorId,unique id for team 
+number,car number
+position,final position of each car after qualifying event
+q1,qualifying times during first Qualifier
+q2,qualifying times during second Qualifier
+q3,qualifying times during third Qualifier

@@ -1,0 +1,8 @@
+feature,description
+raceId,"unique id for each event (race, qualifying event, sprint)"
+driverId,unique id for each driver
+stop,number of stops by car
+lap,lap count
+time,wall clock time when pit stop occurs
+duration,duration of pit stop in seconds
+milliseconds,duration of pit stop in milliseconds
