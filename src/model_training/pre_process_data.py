@@ -19,47 +19,53 @@ class processData:
     ):
         """This function cretaes an intial dataset that has all the columns mentioned in the
         question document
-
-        Args:
-            lap_times_df: table with lap times
-            races_df: table with desciption on the race
-            results_df: table with final race results
-        Return:
-            Master dataframe with all the columns
         """
 
         lap_times_merge_races = pd.merge(
             lap_times_df,
-            races_df[self.config.get("RACES_DF_COLUMNS")],
+            races_df[self.config.get("RACES_DF_COLUMNS_FOR_MERGE")],
             on="raceId",
             how="left",
         )
 
         lap_times_master_df = pd.merge(
             lap_times_merge_races,
-            results_df[self.config.get("RESULTS_DF_COLUMNS")],
+            results_df[self.config.get("RESULTS_DF_COLUMNS_FOR_MERGE")],
             on=["driverId", "raceId"],
             how="left",
         )
 
+        lap_times_master_df = lap_times_master_df.drop(columns=["time"])
         return lap_times_master_df
 
-    def process_data(
-        self,
-        lap_times_df,
-        pit_stops_df,
-        qualifying_df,
-        races_df,
-        results_df,
-        sprint_results_df,
-        status_df,
+    def add_pitstop_data(
+        self, master_laptime_data: pd.DataFrame, pit_stop_data: pd.DataFrame
     ) -> pd.DataFrame:
-        """
-        process data for data analysis
+        """Add pitstop duraction in minutes and milliseconds
+        and a boolean column that says if the pitstop was taken in the lap
+
         """
 
-        lap_times_master_df = self.create_initial_dataset(
-            lap_times_df=lap_times_df, races_df=races_df, results_df=results_df
+        pit_stop_data = pit_stop_data.rename(
+            columns={
+                "milliseconds": "pitStopMilliseconds",
+            }
         )
 
-        return lap_times_master_df
+        master_laptime_data_with_pit_stops = pd.merge(
+            master_laptime_data,
+            pit_stop_data[self.config.get("PIT_STOP_DF_COLUMNS_FOR_MERGE")],
+            on=["raceId", "driverId", "lap"],
+            how="left",
+        )
+
+        master_laptime_data_with_pit_stops = master_laptime_data_with_pit_stops.fillna(
+            0
+        )
+
+        master_laptime_data_with_pit_stops["isPitStop"] = (
+            master_laptime_data_with_pit_stops["pitStopMilliseconds"] > 0
+        )
+
+        return master_laptime_data_with_pit_stops
+    

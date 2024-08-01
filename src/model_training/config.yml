@@ -2,7 +2,7 @@
 DATA_FOLDER: ../data/data_files/
 
 
-RACES_DF_COLUMNS: 
+RACES_DF_COLUMNS_FOR_MERGE: 
   - raceId
   - year
   - round
@@ -10,7 +10,14 @@ RACES_DF_COLUMNS:
   - name
   - date
 
-RESULTS_DF_COLUMNS:
+RESULTS_DF_COLUMNS_FOR_MERGE:
   - raceId
   - driverId
   - number
+  - statusId
+
+PIT_STOP_DF_COLUMNS_FOR_MERGE:
+  - raceId
+  - driverId
+  - lap
+  - pitStopMilliseconds
