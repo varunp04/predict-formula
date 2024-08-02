@@ -10,7 +10,6 @@ class LSTM(nn.Module):
         num_classes: int,
         input_size: int,
         hidden_size_layer: int,
-        dense_layer_size: int,
         num_layers: int,
         dropout_rate: float,
     ):
@@ -20,7 +19,6 @@ class LSTM(nn.Module):
         self.hidden_size = hidden_size_layer
         self.input_size = input_size
 
-        self.dense_layer_size = dense_layer_size
         
         # LSTM model
         self.lstm = nn.LSTM(
@@ -33,10 +31,9 @@ class LSTM(nn.Module):
 
         self.batch_norm = nn.BatchNorm1d(self.hidden_size)
 
-        self.fully_connected_layer_1 = nn.Linear(
-            self.hidden_size, self.dense_layer_size
+        self.fully_connected_layer = nn.Linear(
+            self.hidden_size, self.num_classes
         )
-        self.fully_connected_layer_2 = nn.Linear(self.dense_layer_size, num_classes)
 
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
@@ -60,14 +57,8 @@ class LSTM(nn.Module):
             LSTM_layer_output.transpose(1, 2)
         ).transpose(1, 2)
 
-        fully_connected_layer_1_output = self.fully_connected_layer_1(
+        fully_connected_layer_output = self.fully_connected_layer(
             LSTM_layer_output[:, -1, :]
         )
-        fully_connected_layer_1_output = self.relu(fully_connected_layer_1_output)
-        fully_connected_layer_1_output = self.dropout(fully_connected_layer_1_output)
-        fully_connected_layer_2_output = self.fully_connected_layer_2(
-            fully_connected_layer_1_output
-        )
-        fully_connected_layer_2_output = self.relu(fully_connected_layer_2_output)
-
-        return fully_connected_layer_2_output
+        fully_connected_layer_output = self.relu(fully_connected_layer_output)
+        return fully_connected_layer_output

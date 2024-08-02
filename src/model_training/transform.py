@@ -5,6 +5,7 @@ from typing import List, Dict, Tuple
 import pickle
 from utils import save_as_pickle
 
+
 class transformData:
 
     def __init__(
@@ -236,3 +237,44 @@ class transformData:
             x_sequential, y_sequential = x_sequential + x_ss, y_sequential + y_ss
 
         return x_sequential, y_sequential
+
+
+class tranformDataInference(transformData):
+
+    def __init__(
+        self,
+        n_steps_input: int,
+        n_steps_output: int,
+        config: Dict,
+        numerical_columns_list: List = None,
+    ) -> None:
+        super().__init__(n_steps_input, n_steps_output, config, numerical_columns_list)
+
+    def create_scaled_data_inference(self, data: pd.DataFrame):
+
+        data = data.sort_values(by=["raceId", "lap"])
+        data = data.reset_index(drop=True)
+
+        columns_list = data.columns
+        
+
+        with open(f"{self.config.get('MODEL_PATH')}scaler_dict.pkl", "rb") as f:
+            scaler_dict = pickle.load(f)
+
+        scaled_df, all_scaled_columns = self.scale_data_validation(
+            data=data, scaler_dict=scaler_dict
+        )
+
+
+        unscaled_columns = list(set(columns_list) - set(all_scaled_columns))
+
+        unscaled_columns.append(self.TARGET_COLUMN)
+  
+
+        scaled_df[unscaled_columns] = data[unscaled_columns]
+
+
+        scaled_input_df = scaled_df.drop(columns=[self.TARGET_COLUMN, f"{self.TARGET_COLUMN}_scaled"])
+        output_df = scaled_df[["raceId", self.TARGET_COLUMN]]
+
+        return scaled_input_df, output_df

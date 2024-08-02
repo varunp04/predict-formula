@@ -55,10 +55,9 @@ class train:
             loss.backward()
             optimizer.step()
 
-            if i % 100 == 99:
-                avg_loss_accross_batch = running_loss / 100
-                print(f"Batch {i+1}, train loss: {avg_loss_accross_batch}")
-                running_loss = 0.0
+            avg_loss_accross_batch = running_loss / 100
+            print(f"Batch {i+1}, train loss: {avg_loss_accross_batch}")
+            running_loss = 0.0
         return lstm
 
     def test_one_epoch(
