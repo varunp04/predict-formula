@@ -268,13 +268,14 @@ class tranformDataInference(transformData):
 
         unscaled_columns = list(set(columns_list) - set(all_scaled_columns))
 
-        unscaled_columns.append(self.TARGET_COLUMN)
+        unscaled_columns.extend([self.TARGET_COLUMN, "lap"])
   
 
         scaled_df[unscaled_columns] = data[unscaled_columns]
 
 
-        scaled_input_df = scaled_df.drop(columns=[self.TARGET_COLUMN, f"{self.TARGET_COLUMN}_scaled"])
+        scaled_input_df = scaled_df.drop(columns=["lap", self.TARGET_COLUMN, f"{self.TARGET_COLUMN}_scaled"])
         output_df = scaled_df[["raceId", self.TARGET_COLUMN]]
+        lap_df = scaled_df[["raceId", "lap"]]
 
-        return scaled_input_df, output_df
+        return scaled_input_df, output_df, lap_df

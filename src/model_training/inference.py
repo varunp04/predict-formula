@@ -20,7 +20,7 @@ class makeInference:
             config=self.config,
         )
 
-        scaled_input_df, output_df = transform_obj.create_scaled_data_inference(
+        scaled_input_df, output_df, lap_df = transform_obj.create_scaled_data_inference(
             data=data
         )
 
@@ -28,7 +28,11 @@ class makeInference:
             scaled_input_df=scaled_input_df, scaled_output_df=output_df
         )
 
-        return x_sequential, y_sequential
+        _, lap_sequential = transform_obj.create_sequence(
+            scaled_input_df=scaled_input_df, scaled_output_df=lap_df
+        )
+
+        return x_sequential, y_sequential, lap_sequential
 
     def model_fn(self):
         """Load model"""
@@ -50,7 +54,7 @@ class makeInference:
     def perform_inference(self, test_data: pd.DataFrame, device: str):
         """Perform necessary transformation and then predict"""
 
-        x_sequential, y_sequential = self.transfrom_data(data=test_data)
+        x_sequential, y_sequential, lap_sequential = self.transfrom_data(data=test_data)
 
         lstm_model = self.model_fn()
 
@@ -69,11 +73,11 @@ class makeInference:
 
         with torch.no_grad():
             predictions = lstm_model(input_tensor, device=device)
-        
+
         print(predictions)
 
         inverse_transformed_preds = self.inverse_transform_predictions(
             predictions=predictions
         )
 
-        return inverse_transformed_preds, y_sequential
+        return inverse_transformed_preds, y_sequential, lap_sequential
