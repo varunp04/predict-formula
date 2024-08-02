@@ -119,3 +119,52 @@ class engineerFeaturesForTraining:
         columns_from_oh_encoder = one_hot_encoded_df.columns
 
         return engineered_lap_time_data, one_hot_encoder, columns_from_oh_encoder
+
+
+class splitData:
+
+    def train_test_split(
+        self, data: pd.DataFrame, race_id: str
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """select a race event as a test set to show the real life scenario"""
+
+        test_data = data[data["raceId"] == race_id]
+        test_data = test_data.reset_index(drop=True)
+
+        train_data = data[data["raceId"] != race_id]
+        train_data = train_data.reset_index(drop=True)
+
+        return train_data, test_data
+
+    def train_validation_split(
+        self, train_data: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """create a split so that train set consist of 80% of that laps"""
+
+        train_set_ls = []
+        validation_set_ls = []
+
+        for race_id in train_data["raceId"].unique():
+
+            train_data_by_race_id = train_data[train_data["raceId"] == race_id]
+
+            train_data_by_race_id = train_data_by_race_id.sort_values(by=["lap"])
+
+            train_data_by_race_id = train_data_by_race_id.reset_index(drop=True)
+
+            split_point = int(train_data_by_race_id.shape[0] * 0.8)
+
+            train_set = train_data_by_race_id.iloc[:split_point]
+
+            validation_set = train_data_by_race_id.iloc[split_point:]
+
+            train_set = train_set.reset_index(drop=True)
+            validation_set = validation_set.reset_index(drop=True)
+
+            train_set_ls.append(train_set)
+            validation_set_ls.append(validation_set)
+
+        train_set_df = pd.concat(train_set_ls, axis=0)
+        validation_set_df = pd.concat(validation_set_ls, axis=0)
+
+        return train_set_df, validation_set_df

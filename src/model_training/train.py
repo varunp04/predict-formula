@@ -4,6 +4,7 @@ from data import TensorDataset
 from utils import save_as_pickle
 from typing import Tuple, Dict, List
 
+
 class train:
 
     def __init__(self, config) -> None:
@@ -17,7 +18,6 @@ class train:
         x_validation: torch.Tensor,
         y_validation: torch.Tensor,
     ) -> Tuple[DataLoader, DataLoader]:
-
 
         train_dataset = TensorDataset(x_train, y_train)
         validation_dataset = TensorDataset(x_validation, y_validation)
@@ -97,11 +97,9 @@ class train:
         device: str,
     ):
 
-
         for epoch in range(n_epochs):
 
             print(f"Epoch num: {epoch}")
-
 
             lstm = self.train_one_epoch(
                 lstm=lstm_model,
@@ -116,6 +114,8 @@ class train:
                 validation_loader=validation_loader,
                 device=device,
             )
-        save_as_pickle(path=self.config.get("MODEL_PATH"), artifact_name="model.pkl", artifact=lstm)
+        save_as_pickle(
+            path=self.config.get("MODEL_PATH"), artifact_name="model.pkl", artifact=lstm
+        )
 
         return validation_loss
