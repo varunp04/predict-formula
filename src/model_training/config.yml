@@ -21,3 +21,28 @@ PIT_STOP_DF_COLUMNS_FOR_MERGE:
   - driverId
   - lap
   - pitStopMilliseconds
+
+FEATURE_USED_IN_TRAINING:
+  - raceId
+  - lap
+  - position
+  - milliseconds
+  - year
+  - date
+  - statusId
+  - isPitStop
+
+FEATURES_TO_ONEHOT_ENCODE: 
+  - isPitStop
+  - statusId
+
+MINIMUM_LAPS_IN_GP: 8
+
+MINMAX_SCALING_COLUMNS:
+  - lap
+  - position
+  - milliseconds_1_prior
+  - lap_number_1_prior
+  - position_1_prior_lap
+
+TARGET_COLUMN: milliseconds
