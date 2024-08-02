@@ -1,18 +1,9 @@
-from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Tuple
 import pickle
-import yaml
-
-from datetime import datetime, timedelta
-
-from dateutil.relativedelta import relativedelta
-import logging
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
+from utils import save_as_pickle
 
 class transformData:
 
@@ -46,6 +37,55 @@ class transformData:
         column_scaled = column_scaler.fit_transform(data[columns_list])
 
         return column_scaled, column_scaler
+
+    def scale_data_validation(
+        self, data: pd.DataFrame, scaler_dict: Dict
+    ) -> Tuple[pd.DataFrame, List]:
+        """Scale the numerical columns in the data by using the scalers in training"""
+
+        ls_all_scaled_columns = []
+
+        ## year scaler
+
+        ls_all_scaled_columns.append("year")
+
+        year_column_scaled = scaler_dict["year_scaler"].transform(data[["year"]])
+
+        scaled_df = pd.DataFrame(year_column_scaled, columns=["year_scaled"])
+
+        ## date scaler
+
+        ls_all_scaled_columns.append("day")
+
+        scaled_df["day_scaled"] = scaler_dict["day_scaler"].transform(data[["day"]])
+
+        ## minmax scaler columns
+
+        for column_name in self.config.get("MINMAX_SCALING_COLUMNS"):
+
+            ls_all_scaled_columns.append(column_name)
+
+            scaled_df[f"{column_name}_scaled"] = scaler_dict[
+                f"{column_name}_scaler"
+            ].transform(data[[column_name]])
+
+        ## month scaler
+
+        ls_all_scaled_columns.append("month")
+
+        scaled_df["month_sin"], scaled_df["month_cos"] = self.scale_month_column(
+            data["month"]
+        )
+
+        ## target scaler
+
+        ls_all_scaled_columns.append(self.TARGET_COLUMN)
+
+        (scaled_df[f"{self.TARGET_COLUMN}_scaled"]) = scaler_dict[
+            f"{self.TARGET_COLUMN}_scaler"
+        ].transform(data[[self.TARGET_COLUMN]])
+
+        return (scaled_df, ls_all_scaled_columns)
 
     def scale_data(self, data: pd.DataFrame) -> Tuple[pd.DataFrame, List, Dict]:
         """Scale the numerical columns in the data"""
@@ -125,7 +165,9 @@ class transformData:
         return x, y
 
     def create_scaled_input_output_data(
-        self, data: pd.DataFrame
+        self,
+        data: pd.DataFrame,
+        train=False,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict]:
         """Create scaled input data and scaled output data"""
 
@@ -134,16 +176,42 @@ class transformData:
 
         columns_list = data.columns
 
-        scaled_df, all_scaled_columns, scaler_dict = self.scale_data(data=data)
+        if train == True:
 
-        unscaled_columns = list(set(columns_list) - set(all_scaled_columns))
+            scaled_df, all_scaled_columns, scaler_dict = self.scale_data(data=data)
 
-        scaled_df[unscaled_columns] = data[unscaled_columns]
+            unscaled_columns = list(set(columns_list) - set(all_scaled_columns))
 
-        scaled_input_df = scaled_df.drop(columns=[f"{self.TARGET_COLUMN}_scaled"])
-        scaled_output_df = scaled_df[["raceId", f"{self.TARGET_COLUMN}_scaled"]]
+            scaled_df[unscaled_columns] = data[unscaled_columns]
 
-        return scaled_input_df, scaled_output_df, scaler_dict
+            scaled_input_df = scaled_df.drop(columns=[f"{self.TARGET_COLUMN}_scaled"])
+            scaled_output_df = scaled_df[["raceId", f"{self.TARGET_COLUMN}_scaled"]]
+
+            save_as_pickle(
+                path=self.config.get("MODEL_PATH"),
+                artifact_name="scaler_dict.pkl",
+                artifact=scaler_dict,
+            )
+
+            return scaled_input_df, scaled_output_df
+
+        else:
+
+            with open(f"{self.config.get('MODEL_PATH')}scaler_dict.pkl", "rb") as f:
+                scaler_dict = pickle.load(f)
+
+            scaled_df, all_scaled_columns = self.scale_data_validation(
+                data=data, scaler_dict=scaler_dict
+            )
+
+            unscaled_columns = list(set(columns_list) - set(all_scaled_columns))
+
+            scaled_df[unscaled_columns] = data[unscaled_columns]
+
+            scaled_input_df = scaled_df.drop(columns=[f"{self.TARGET_COLUMN}_scaled"])
+            scaled_output_df = scaled_df[["raceId", f"{self.TARGET_COLUMN}_scaled"]]
+
+            return scaled_input_df, scaled_output_df
 
     def create_sequence(
         self, scaled_input_df: pd.DataFrame, scaled_output_df: pd.DataFrame

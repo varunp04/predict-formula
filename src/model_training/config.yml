@@ -46,3 +46,11 @@ MINMAX_SCALING_COLUMNS:
   - position_1_prior_lap
 
 TARGET_COLUMN: milliseconds
+
+MODEL_PATH: ../artifacts/
+
+INPUT_SIZE: 54
+
+NUM_LAYERS: 1
+
+NUM_CLASSES: 5

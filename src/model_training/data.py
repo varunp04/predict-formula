@@ -1,9 +1,7 @@
 import pandas as pd
-import logging
 from typing import Dict, Tuple
+from torch.utils.data import Dataset
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 
 class gatherData:
@@ -36,6 +34,7 @@ class gatherData:
         )
         status_df = pd.read_csv(self.config.get("DATA_FOLDER") + "status.csv")
 
+
         return (
             lap_times_df,
             pit_stops_df,
@@ -45,3 +44,16 @@ class gatherData:
             sprint_results_df,
             status_df,
         )
+
+
+class TensorDataset(Dataset):
+
+    def __init__(self, feature_set, target):
+        self.X = feature_set
+        self.y = target
+
+    def __len__(self):
+        return len(self.X)
+
+    def __getitem__(self, i):
+        return self.X[i], self.y[i]
