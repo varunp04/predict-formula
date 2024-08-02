@@ -46,3 +46,5 @@ MINMAX_SCALING_COLUMNS:
   - position_1_prior_lap
 
 TARGET_COLUMN: milliseconds
+
+MODEL_PATH: ../artifacts/

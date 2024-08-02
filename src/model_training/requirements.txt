@@ -6,3 +6,4 @@ boto3==1.*
 black==24.*
 plotly==5.*
 nbformat>=4.2.0
+torch==2.*
