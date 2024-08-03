@@ -48,7 +48,7 @@ class engineerFeaturesForTraining:
         """get the one hot encoded columns for the categorical column"""
 
         ohe_features = self.config.get("FEATURES_TO_ONEHOT_ENCODE")
-        oh = OneHotEncoder(sparse_output=False, handle_unknown="ignore").set_output(
+        oh = OneHotEncoder(sparse_output=False, handle_unknown="infrequent_if_exist").set_output(
             transform="pandas"
         )
         oh.fit(feature_dataframe[ohe_features])

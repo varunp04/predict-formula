@@ -1,6 +1,7 @@
 import pandas as pd
 import logging
 from typing import Dict, Tuple
+import numpy as np
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -38,6 +39,19 @@ class processData:
         lap_times_master_df = lap_times_master_df.drop(columns=["time"])
         return lap_times_master_df
 
+    def work_on_outliers(self, master_lap_time_data: pd.DataFrame) -> pd.DataFrame:
+
+        master_lap_time_data["milliseconds"] = master_lap_time_data[
+            "milliseconds"
+        ].mask(master_lap_time_data["milliseconds"] > 500000)
+
+        master_lap_time_data["milliseconds"] = master_lap_time_data.groupby(
+            "circuitId"
+        )["milliseconds"].transform(lambda x: x.fillna(x.mean()))
+
+        
+        return master_lap_time_data
+
     def add_pitstop_data(
         self, master_laptime_data: pd.DataFrame, pit_stop_data: pd.DataFrame
     ) -> pd.DataFrame:
@@ -68,4 +82,3 @@ class processData:
         )
 
         return master_laptime_data_with_pit_stops
-    

@@ -1,4 +1,4 @@
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Tuple
@@ -13,13 +13,11 @@ class transformData:
         n_steps_input: int,
         n_steps_output: int,
         config: Dict,
-        numerical_columns_list: List = None,
     ) -> None:
 
         self.n_steps_input = n_steps_input
         self.n_steps_output = n_steps_output
         self.config = config
-        self.numerical_columns_list = numerical_columns_list
         self.TARGET_COLUMN = self.config.get("TARGET_COLUMN")
 
     def scale_month_column(
@@ -28,6 +26,17 @@ class transformData:
         return np.sin(2 * np.pi * column_series / 12), np.cos(
             2 * np.pi * column_series / 12
         )
+
+    def perform_robust_scaler(
+        self, data: pd.DataFrame, columns_list: List
+    ) -> Tuple[np.ndarray, RobustScaler]:
+        """Perform RobustScaler on a specific column"""
+
+        column_scaler = RobustScaler()
+        column_scaled = column_scaler.fit_transform(data[columns_list])
+
+        return column_scaled, column_scaler
+
 
     def perform_min_max_scaler(
         self, data: pd.DataFrame, columns_list: List
@@ -70,6 +79,16 @@ class transformData:
                 f"{column_name}_scaler"
             ].transform(data[[column_name]])
 
+        ## Robust scaling
+
+        for column_name in self.config.get("ROBUST_SCALING"):
+
+            ls_all_scaled_columns.append(column_name)
+
+            scaled_df[f"{column_name}_scaled"] = scaler_dict[
+                f"{column_name}_scaler"
+            ].transform(data[[column_name]])
+
         ## month scaler
 
         ls_all_scaled_columns.append("month")
@@ -82,11 +101,11 @@ class transformData:
 
         ls_all_scaled_columns.append(self.TARGET_COLUMN)
 
-        (scaled_df[f"{self.TARGET_COLUMN}_scaled"]) = scaler_dict[
-            f"{self.TARGET_COLUMN}_scaler"
-        ].transform(data[[self.TARGET_COLUMN]])
+        scaled_df[f"{self.TARGET_COLUMN}_scaled"] = scaler_dict[
+                f"{self.TARGET_COLUMN}_scaler"
+            ].transform(data[[self.TARGET_COLUMN]])
 
-        return (scaled_df, ls_all_scaled_columns)
+        return scaled_df, ls_all_scaled_columns
 
     def scale_data(self, data: pd.DataFrame) -> Tuple[pd.DataFrame, List, Dict]:
         """Scale the numerical columns in the data"""
@@ -127,6 +146,16 @@ class transformData:
                 self.perform_min_max_scaler(data=data, columns_list=[column_name])
             )
 
+        ## robust scaler
+
+        for column_name in self.config.get("ROBUST_SCALING"):
+
+            ls_all_scaled_columns.append(column_name)
+
+            scaled_df[f"{column_name}_scaled"], scaler_dict[f"{column_name}_scaler"] = (
+                self.perform_robust_scaler(data=data, columns_list=[column_name])
+            )
+
         ## month scaler
 
         ls_all_scaled_columns.append("month")
@@ -142,9 +171,7 @@ class transformData:
         (
             scaled_df[f"{self.TARGET_COLUMN}_scaled"],
             scaler_dict[f"{self.TARGET_COLUMN}_scaler"],
-        ) = self.perform_min_max_scaler(
-            data=data, columns_list=[self.config.get("TARGET_COLUMN")]
-        )
+        ) = self.perform_robust_scaler(data=data, columns_list=[self.TARGET_COLUMN])
 
         return scaled_df, ls_all_scaled_columns, scaler_dict
 
@@ -246,9 +273,8 @@ class tranformDataInference(transformData):
         n_steps_input: int,
         n_steps_output: int,
         config: Dict,
-        numerical_columns_list: List = None,
     ) -> None:
-        super().__init__(n_steps_input, n_steps_output, config, numerical_columns_list)
+        super().__init__(n_steps_input, n_steps_output, config)
 
     def create_scaled_data_inference(self, data: pd.DataFrame):
 
@@ -256,7 +282,6 @@ class tranformDataInference(transformData):
         data = data.reset_index(drop=True)
 
         columns_list = data.columns
-        
 
         with open(f"{self.config.get('MODEL_PATH')}scaler_dict.pkl", "rb") as f:
             scaler_dict = pickle.load(f)
@@ -265,16 +290,15 @@ class tranformDataInference(transformData):
             data=data, scaler_dict=scaler_dict
         )
 
-
         unscaled_columns = list(set(columns_list) - set(all_scaled_columns))
 
         unscaled_columns.extend([self.TARGET_COLUMN, "lap"])
-  
 
         scaled_df[unscaled_columns] = data[unscaled_columns]
 
-
-        scaled_input_df = scaled_df.drop(columns=["lap", self.TARGET_COLUMN, f"{self.TARGET_COLUMN}_scaled"])
+        scaled_input_df = scaled_df.drop(
+            columns=["lap", self.TARGET_COLUMN, f"{self.TARGET_COLUMN}_scaled"]
+        )
         output_df = scaled_df[["raceId", self.TARGET_COLUMN]]
         lap_df = scaled_df[["raceId", "lap"]]
 

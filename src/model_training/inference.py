@@ -3,7 +3,7 @@ import pandas as pd
 from typing import Dict, List, Tuple
 from transform import tranformDataInference
 import torch
-
+import numpy as np
 
 class makeInference:
     def __init__(self, config: Dict) -> None:
@@ -15,7 +15,7 @@ class makeInference:
         """Transform the data for inference"""
 
         transform_obj = tranformDataInference(
-            n_steps_input=self.config.get("N_STEP_INPUT"),
+            n_steps_input=self.config.get("NUMBER_OF_HISTORICAL_LAP"),
             n_steps_output=self.config.get("N_STEP_OUTPUT"),
             config=self.config,
         )
@@ -49,6 +49,8 @@ class makeInference:
         transformed_predictions = scaler_dict[
             f"{self.TARGET_COLUMN}_scaler"
         ].inverse_transform(predictions)
+
+        transformed_predictions_exponential = np.expm1(transformed_predictions)
         return transformed_predictions
 
     def perform_inference(self, test_data: pd.DataFrame, device: str):
@@ -64,7 +66,7 @@ class makeInference:
             input_tensor,
             (
                 input_tensor.shape[0],
-                2,
+                self.config.get("NUMBER_OF_HISTORICAL_LAP"),
                 input_tensor.shape[2],
             ),
         )
