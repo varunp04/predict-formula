@@ -9,3 +9,4 @@ seaborn==0.*
 matplotlib==3.*
 nbformat>=4.2.0
 torch==2.3.0
+statsmodels==0.*

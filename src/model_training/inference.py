@@ -36,7 +36,7 @@ class makeInference:
 
     def model_fn(self):
         """Load model"""
-        with open(f"{self.config.get('MODEL_PATH')}model.pkl", "rb") as f:
+        with open(f"{self.config.get('MODEL_PATH')}best_model.pkl", "rb") as f:
             loaded_model = pickle.load(f)
         return loaded_model
 

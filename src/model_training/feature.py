@@ -61,19 +61,13 @@ class engineerFeaturesForTraining:
     ) -> pd.DataFrame:
         """Add previous lap's lap time to the dataframe"""
 
-        ls_prior_columns = [
-            "milliseconds_1_prior",
-            "lap_number_1_prior",
-            "position_1_prior_lap",
-            "pitStopMilliseconds_1_prior", 
-            "isPitStop_1_prior",
-        ]
-
         feature_dataframe = feature_dataframe.sort_values(by=["lap"])
 
         feature_dataframe = feature_dataframe.reset_index(drop=True)
 
-        feature_dataframe[ls_prior_columns] = feature_dataframe[column_list].shift(1)
+        feature_dataframe[self.config.get("LAGGED_FEATURE_NAMES")] = feature_dataframe[
+            column_list
+        ].shift(1)
 
         return feature_dataframe
 
@@ -88,6 +82,17 @@ class engineerFeaturesForTraining:
 
         return feature_dataframe
 
+    def create_cumulative_pit_stop_indicator(
+        self, feature_df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Add column that indicates how many pit stops are taken before the lap"""
+
+        feature_df["PitStopIndicator"] = feature_df.groupby("raceId")[
+            "isPitStop"
+        ].cumsum()
+
+        return feature_df
+
     def engineer_data(self, lap_times_data: pd.DataFrame) -> pd.DataFrame:
         """Engineer the data by applying relevent engineering techinques"""
 
@@ -97,7 +102,20 @@ class engineerFeaturesForTraining:
             self.config.get("FEATURE_USED_IN_TRAINING")
         ]
 
-        lap_times_data_selected_features["isPitStop"] = lap_times_data_selected_features["isPitStop"].astype(int)
+        lap_times_data_selected_features["isPitStop"] = (
+            lap_times_data_selected_features["isPitStop"].astype(int)
+        )
+
+        lap_times_data_selected_features = self.create_cumulative_pit_stop_indicator(
+            feature_df=lap_times_data_selected_features
+        )
+
+        lap_times_data_selected_features["lapDifference"] = (
+            lap_times_data_selected_features.groupby(["raceId"])["milliseconds"].diff()
+        )
+        lap_times_data_selected_features["lapDifference"] = (
+            lap_times_data_selected_features["lapDifference"].fillna(0)
+        )
 
         lap_times_data_selected_features = self.add_lagged_features(
             feature_dataframe=lap_times_data_selected_features
@@ -108,7 +126,6 @@ class engineerFeaturesForTraining:
         lap_time_with_date_features = self.add_date_features(
             feature_dataframe=lap_times_data_selected_features
         )
-
 
         one_hot_encoded_df, one_hot_encoder = self.create_one_hot_encoding(
             feature_dataframe=lap_time_with_date_features
@@ -130,14 +147,14 @@ class engineerFeaturesForTraining:
 class splitData:
 
     def train_test_split(
-        self, data: pd.DataFrame, race_id: str
+        self, data: pd.DataFrame, race_id_list: List
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """select a race event as a test set to show the real life scenario"""
 
-        test_data = data[data["raceId"] == race_id]
+        test_data = data[data["raceId"].isin(race_id_list)]
         test_data = test_data.reset_index(drop=True)
 
-        train_data = data[data["raceId"] != race_id]
+        train_data = data[~data["raceId"].isin(race_id_list)]
         train_data = train_data.reset_index(drop=True)
 
         return train_data, test_data

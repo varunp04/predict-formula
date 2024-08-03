@@ -42,39 +42,75 @@ LAGGED_FEATURES:
   - position
   - pitStopMilliseconds
   - isPitStop
+  - PitStopIndicator
+  - lapDifference
+
+LAGGED_FEATURE_NAMES:
+  - milliseconds_1_prior
+  - lap_number_1_prior
+  - position_1_prior_lap
+  - pitStopMilliseconds_1_prior
+  - isPitStop_1_prior
+  - PitStopIndicator_1_prior
+  - lapDifference_1_prior
+
 
 DROP_COLUMNS_AVOID_LEAKAGE:
   - position
-  - isPitStop
   - pitStopMilliseconds
+  - lapDifference
+  - isPitStop
 
-RACE_ID_TEST_SET: 867
+DROP_COLUMNS_CORR: # these columns are dropped to avoid correlation between input feartues or features that are not much correlated
+  - lap_number_1_prior
+  - PitStopIndicator
+  - month
+  - PitStopIndicator_1_prior
+  - pitStopMilliseconds_1_prior
+  - day
 
-NUMBER_OF_HISTORICAL_LAP: 5
+
+RACE_ID_TEST_SET: 
+  - 4
+  - 17
+  - 5
+
+NUMBER_OF_HISTORICAL_LAP: 2
 
 MINIMUM_LAPS_IN_GP: 8
 
 MINMAX_SCALING_COLUMNS:
   - lap
-  - lap_number_1_prior
   - position_1_prior_lap
-  - pitStopMilliseconds_1_prior
+  # - pitStopMilliseconds_1_prior
 
 ROBUST_SCALING:
   - milliseconds_1_prior
+  - lapDifference_1_prior
 
 TARGET_COLUMN: milliseconds
 
-HIDDEN_SIZE_1: 48
+N_EPOCHS: 10
 
-HIDDEN_SIZE_2: 32
+HIDDEN_SIZE_1: 32
 
-DENSE_LAYER: 16 
+HIDDEN_SIZE_2: 16
 
-BATCH_SIZE: 8
+DENSE_LAYER: 8
+
+BATCH_SIZE: 16
 
 MODEL_PATH: ../artifacts/
 
 NUM_LAYERS: 1
 
 N_STEP_OUTPUT: 5
+
+HYPER_PARAMS:
+  LEARNING_RATE: [0.01, 0.001, 0.05]
+  BATCH_SIZE: [16, 32, 64]
+  HIDDEN_SIZE_1: [64, 32, 16]
+  HIDDEN_SIZE_2: [32, 16, 8]
+  DROPOUT: [0.2, 0.3]
+
+NUM_RUNS: 5
