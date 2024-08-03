@@ -60,6 +60,8 @@ class makeInference:
 
         lstm_model = self.model_fn()
 
+        lstm_model.train(False)
+
         input_tensor = torch.Tensor(x_sequential)
 
         input_tensor = torch.reshape(

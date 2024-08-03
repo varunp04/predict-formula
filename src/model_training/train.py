@@ -50,15 +50,13 @@ class train:
 
             output = lstm(x_batch, device=device)
             loss = loss_fn(output, y_batch)
-            running_loss += loss
+            running_loss += loss.item()
 
             loss.backward()
             optimizer.step()
-
-            avg_loss_accross_batch = running_loss / 100
-            print(f"Batch {i+1}, train loss: {avg_loss_accross_batch}")
-            running_loss = 0.0
-        return lstm
+        avg_train_loss = running_loss/i
+        print(f"Average train loss accross batch: {avg_train_loss}")
+        return lstm, avg_train_loss
 
     def test_one_epoch(
         self,
@@ -94,27 +92,31 @@ class train:
         train_loader: DataLoader,
         validation_loader: DataLoader,
         device: str,
-    ):
+    ) -> List:
+        
+        ls_validation_loss = []
+        ls_train_loss = []
 
         for epoch in range(n_epochs):
 
             print(f"Epoch num: {epoch}")
 
-            lstm = self.train_one_epoch(
+            lstm , avg_train_loss = self.train_one_epoch(
                 lstm=lstm_model,
                 optimizer=optimizer,
                 loss_fn=loss_fn,
                 train_loader=train_loader,
                 device=device,
             )
+            ls_train_loss.append(avg_train_loss)
             validation_loss = self.test_one_epoch(
                 lstm=lstm,
                 loss_fn=loss_fn,
                 validation_loader=validation_loader,
                 device=device,
             )
+            ls_validation_loss.append(validation_loss)
         save_as_pickle(
             path=self.config.get("MODEL_PATH"), artifact_name="model.pkl", artifact=lstm
         )
-
-        return validation_loss
+        return ls_validation_loss, ls_train_loss

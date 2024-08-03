@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from typing import List, Dict, Tuple
+from sklearn.model_selection import train_test_split
 
 
 class engineerFeaturesForTraining:
@@ -48,9 +49,9 @@ class engineerFeaturesForTraining:
         """get the one hot encoded columns for the categorical column"""
 
         ohe_features = self.config.get("FEATURES_TO_ONEHOT_ENCODE")
-        oh = OneHotEncoder(sparse_output=False, handle_unknown="infrequent_if_exist").set_output(
-            transform="pandas"
-        )
+        oh = OneHotEncoder(
+            sparse_output=False, handle_unknown="infrequent_if_exist"
+        ).set_output(transform="pandas")
         oh.fit(feature_dataframe[ohe_features])
 
         return oh.transform(feature_dataframe[ohe_features]), oh
@@ -64,6 +65,8 @@ class engineerFeaturesForTraining:
             "milliseconds_1_prior",
             "lap_number_1_prior",
             "position_1_prior_lap",
+            "pitStopMilliseconds_1_prior", 
+            "isPitStop_1_prior",
         ]
 
         feature_dataframe = feature_dataframe.sort_values(by=["lap"])
@@ -78,7 +81,7 @@ class engineerFeaturesForTraining:
         """Add lagged features by raceId"""
 
         feature_dataframe_grp = feature_dataframe.groupby("raceId").apply(
-            self.shift_column, column_list=["milliseconds", "lap", "position"]
+            self.shift_column, column_list=self.config.get("LAGGED_FEATURES")
         )
 
         feature_dataframe = feature_dataframe_grp.reset_index(drop=True)
@@ -94,6 +97,8 @@ class engineerFeaturesForTraining:
             self.config.get("FEATURE_USED_IN_TRAINING")
         ]
 
+        lap_times_data_selected_features["isPitStop"] = lap_times_data_selected_features["isPitStop"].astype(int)
+
         lap_times_data_selected_features = self.add_lagged_features(
             feature_dataframe=lap_times_data_selected_features
         )
@@ -103,6 +108,7 @@ class engineerFeaturesForTraining:
         lap_time_with_date_features = self.add_date_features(
             feature_dataframe=lap_times_data_selected_features
         )
+
 
         one_hot_encoded_df, one_hot_encoder = self.create_one_hot_encoding(
             feature_dataframe=lap_time_with_date_features
@@ -137,34 +143,12 @@ class splitData:
         return train_data, test_data
 
     def train_validation_split(
-        self, train_data: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        self, x_sequential_ls: List, y_sequential_ls: List
+    ) -> Tuple[List, List, List, List]:
         """create a split so that train set consist of 80% of that laps"""
 
-        train_set_ls = []
-        validation_set_ls = []
+        x_train, x_val, y_train, y_val = train_test_split(
+            x_sequential_ls, y_sequential_ls, train_size=0.8
+        )
 
-        for race_id in train_data["raceId"].unique():
-
-            train_data_by_race_id = train_data[train_data["raceId"] == race_id]
-
-            train_data_by_race_id = train_data_by_race_id.sort_values(by=["lap"])
-
-            train_data_by_race_id = train_data_by_race_id.reset_index(drop=True)
-
-            split_point = int(train_data_by_race_id.shape[0] * 0.8)
-
-            train_set = train_data_by_race_id.iloc[:split_point]
-
-            validation_set = train_data_by_race_id.iloc[split_point:]
-
-            train_set = train_set.reset_index(drop=True)
-            validation_set = validation_set.reset_index(drop=True)
-
-            train_set_ls.append(train_set)
-            validation_set_ls.append(validation_set)
-
-        train_set_df = pd.concat(train_set_ls, axis=0)
-        validation_set_df = pd.concat(validation_set_ls, axis=0)
-
-        return train_set_df, validation_set_df
+        return x_train, x_val, y_train, y_val

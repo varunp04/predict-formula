@@ -5,5 +5,7 @@ sagemaker==2.*
 boto3==1.*
 black==24.*
 plotly==5.*
+seaborn==0.*
+matplotlib==3.*
 nbformat>=4.2.0
 torch==2.3.0
