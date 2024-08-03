@@ -27,6 +27,7 @@ FEATURE_USED_IN_TRAINING:
   - lap
   - position
   - milliseconds
+  - circuitId
   - year
   - date
   - statusId
@@ -35,21 +36,34 @@ FEATURE_USED_IN_TRAINING:
 FEATURES_TO_ONEHOT_ENCODE: 
   - isPitStop
   - statusId
+  - circuitId
+
+RACE_ID_TEST_SET: 841
+
+NUMBER_OF_HISTORICAL_LAP: 3
 
 MINIMUM_LAPS_IN_GP: 8
 
 MINMAX_SCALING_COLUMNS:
   - lap
   - position
-  - milliseconds_1_prior
   - lap_number_1_prior
   - position_1_prior_lap
 
+ROBUST_SCALING:
+  - milliseconds_1_prior
+
 TARGET_COLUMN: milliseconds
 
-MODEL_PATH: ../artifacts/
+HIDDEN_SIZE_1: 48
 
-N_STEP_INPUT: 2
+HIDDEN_SIZE_2: 32
+
+DENSE_LAYER: 16 
+
+BATCH_SIZE: 16
+
+MODEL_PATH: ../artifacts/
 
 NUM_LAYERS: 1
 
