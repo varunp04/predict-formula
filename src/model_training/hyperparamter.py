@@ -14,7 +14,7 @@ class tuneModel:
         self.params = params
         self.split_obj = splitData()
         self.data_transform_obj = transformData(
-            n_steps_input=params["NUMBER_OF_HISTORICAL_LAP"],
+            n_steps_input=self.params["NUMBER_OF_HISTORICAL_LAP"],
             n_steps_output=self.config.get("N_STEP_OUTPUT"),
             config=self.config,
         )

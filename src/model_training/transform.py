@@ -74,26 +74,24 @@ class transformData:
 
         for column_name in self.config.get("MINMAX_SCALING_COLUMNS"):
 
-            if column_name not in data.columns:
-                continue
+            if column_name in data.columns:
 
-            ls_all_scaled_columns.append(column_name)
+                ls_all_scaled_columns.append(column_name)
 
-            scaled_df[f"{column_name}_scaled"] = scaler_dict[
-                f"{column_name}_scaler"
-            ].transform(data[[column_name]])
+                scaled_df[f"{column_name}_scaled"] = scaler_dict[
+                    f"{column_name}_scaler"
+                ].transform(data[[column_name]])
 
         ## Robust scaling
 
         for column_name in self.config.get("ROBUST_SCALING"):
-            if column_name not in data.columns:
-                continue
+            if column_name in data.columns:
 
-            ls_all_scaled_columns.append(column_name)
+                ls_all_scaled_columns.append(column_name)
 
-            scaled_df[f"{column_name}_scaled"] = scaler_dict[
-                f"{column_name}_scaler"
-            ].transform(data[[column_name]])
+                scaled_df[f"{column_name}_scaled"] = scaler_dict[
+                    f"{column_name}_scaler"
+                ].transform(data[[column_name]])
 
         ## month scaler
 
@@ -149,27 +147,27 @@ class transformData:
 
         for column_name in self.config.get("MINMAX_SCALING_COLUMNS"):
 
-            if column_name not in data.columns:
-                continue
+            if column_name in data.columns:
 
-            ls_all_scaled_columns.append(column_name)
+                ls_all_scaled_columns.append(column_name)
 
-            scaled_df[f"{column_name}_scaled"], scaler_dict[f"{column_name}_scaler"] = (
-                self.perform_min_max_scaler(data=data, columns_list=[column_name])
-            )
+                (
+                    scaled_df[f"{column_name}_scaled"],
+                    scaler_dict[f"{column_name}_scaler"],
+                ) = self.perform_min_max_scaler(data=data, columns_list=[column_name])
 
         ## robust scaler
 
         for column_name in self.config.get("ROBUST_SCALING"):
 
-            if column_name not in data.columns:
-                continue
+            if column_name in data.columns:
 
-            ls_all_scaled_columns.append(column_name)
+                ls_all_scaled_columns.append(column_name)
 
-            scaled_df[f"{column_name}_scaled"], scaler_dict[f"{column_name}_scaler"] = (
-                self.perform_robust_scaler(data=data, columns_list=[column_name])
-            )
+                (
+                    scaled_df[f"{column_name}_scaled"],
+                    scaler_dict[f"{column_name}_scaler"],
+                ) = self.perform_robust_scaler(data=data, columns_list=[column_name])
 
         ## month scaler
 
