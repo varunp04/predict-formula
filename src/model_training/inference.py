@@ -3,7 +3,6 @@ import pandas as pd
 from typing import Dict, List, Tuple
 from transform import tranformDataInference
 import torch
-import numpy as np
 
 
 class makeInference:
@@ -51,7 +50,6 @@ class makeInference:
             f"{self.TARGET_COLUMN}_scaler"
         ].inverse_transform(predictions)
 
-        transformed_predictions_exponential = np.expm1(transformed_predictions)
         return transformed_predictions
 
     def perform_inference(self, test_data: pd.DataFrame, device: str):
@@ -78,8 +76,6 @@ class makeInference:
 
         with torch.no_grad():
             predictions = lstm_model(input_tensor, device=device)
-
-        print(predictions)
 
         inverse_transformed_preds = self.inverse_transform_predictions(
             predictions=predictions
