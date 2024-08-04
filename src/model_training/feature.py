@@ -93,7 +93,39 @@ class engineerFeaturesForTraining:
 
         return feature_df
 
-    def engineer_data(self, lap_times_data: pd.DataFrame) -> pd.DataFrame:
+    def race_flags(
+        self, feature_data: pd.DataFrame, results_df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Flagging the lap times that were 30,000 ms greater than fastest lap time"""
+
+        race_id = feature_data["raceId"].unique()[0]
+
+        df_temp = results_df[results_df["raceId"] == race_id]
+
+        fastest_lap_time = (
+            pd.to_timedelta("00:" + df_temp["fastestLapTime"]).dt.total_seconds() * 1000
+        )
+
+        flag_time = fastest_lap_time.values[0] + 40000.0
+
+        feature_data["isRaceFlag"] = feature_data["milliseconds"] > flag_time
+
+        return feature_data
+
+    def add_race_flag_condition(
+        self, data: pd.DataFrame, results_df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Add column that define if the flag was raised"""
+
+        data_grp = data.groupby("raceId").apply(self.race_flags, results_df=results_df)
+
+        feature_data = data_grp.reset_index(drop=True)
+
+        return feature_data
+
+    def engineer_data(
+        self, lap_times_data: pd.DataFrame, results_df: pd.DataFrame
+    ) -> pd.DataFrame:
         """Engineer the data by applying relevent engineering techinques"""
 
         lap_times_selective_races = self.drop_race_ids(feature_dataframe=lap_times_data)
@@ -108,6 +140,14 @@ class engineerFeaturesForTraining:
 
         lap_times_data_selected_features = self.create_cumulative_pit_stop_indicator(
             feature_df=lap_times_data_selected_features
+        )
+
+        lap_times_data_selected_features = self.add_race_flag_condition(
+            data=lap_times_data_selected_features, results_df=results_df
+        )
+
+        lap_times_data_selected_features["isRaceFlag"] = (
+            lap_times_data_selected_features["isRaceFlag"].astype(int)
         )
 
         lap_times_data_selected_features["lapDifference"] = (

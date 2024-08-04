@@ -44,6 +44,7 @@ LAGGED_FEATURES:
   - isPitStop
   - PitStopIndicator
   - lapDifference
+  - isRaceFlag
 
 LAGGED_FEATURE_NAMES:
   - milliseconds_1_prior
@@ -53,6 +54,7 @@ LAGGED_FEATURE_NAMES:
   - isPitStop_1_prior
   - PitStopIndicator_1_prior
   - lapDifference_1_prior
+  - isRaceFlag_1_prior
 
 
 DROP_COLUMNS_AVOID_LEAKAGE:
@@ -68,6 +70,7 @@ DROP_COLUMNS_CORR: # these columns are dropped to avoid correlation between inpu
   - PitStopIndicator_1_prior
   - pitStopMilliseconds_1_prior
   - day
+  - isRaceFlag
 
 
 RACE_ID_TEST_SET: 
