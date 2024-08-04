@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from typing import List, Dict, Tuple
+from sklearn.model_selection import train_test_split
 
 
 class engineerFeaturesForTraining:
@@ -48,9 +49,9 @@ class engineerFeaturesForTraining:
         """get the one hot encoded columns for the categorical column"""
 
         ohe_features = self.config.get("FEATURES_TO_ONEHOT_ENCODE")
-        oh = OneHotEncoder(sparse_output=False, handle_unknown="infrequent_if_exist").set_output(
-            transform="pandas"
-        )
+        oh = OneHotEncoder(
+            sparse_output=False, handle_unknown="infrequent_if_exist"
+        ).set_output(transform="pandas")
         oh.fit(feature_dataframe[ohe_features])
 
         return oh.transform(feature_dataframe[ohe_features]), oh
@@ -60,17 +61,13 @@ class engineerFeaturesForTraining:
     ) -> pd.DataFrame:
         """Add previous lap's lap time to the dataframe"""
 
-        ls_prior_columns = [
-            "milliseconds_1_prior",
-            "lap_number_1_prior",
-            "position_1_prior_lap",
-        ]
-
         feature_dataframe = feature_dataframe.sort_values(by=["lap"])
 
         feature_dataframe = feature_dataframe.reset_index(drop=True)
 
-        feature_dataframe[ls_prior_columns] = feature_dataframe[column_list].shift(1)
+        feature_dataframe[self.config.get("LAGGED_FEATURE_NAMES")] = feature_dataframe[
+            column_list
+        ].shift(1)
 
         return feature_dataframe
 
@@ -78,12 +75,23 @@ class engineerFeaturesForTraining:
         """Add lagged features by raceId"""
 
         feature_dataframe_grp = feature_dataframe.groupby("raceId").apply(
-            self.shift_column, column_list=["milliseconds", "lap", "position"]
+            self.shift_column, column_list=self.config.get("LAGGED_FEATURES")
         )
 
         feature_dataframe = feature_dataframe_grp.reset_index(drop=True)
 
         return feature_dataframe
+
+    def create_cumulative_pit_stop_indicator(
+        self, feature_df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Add column that indicates how many pit stops are taken before the lap"""
+
+        feature_df["PitStopIndicator"] = feature_df.groupby("raceId")[
+            "isPitStop"
+        ].cumsum()
+
+        return feature_df
 
     def engineer_data(self, lap_times_data: pd.DataFrame) -> pd.DataFrame:
         """Engineer the data by applying relevent engineering techinques"""
@@ -93,6 +101,21 @@ class engineerFeaturesForTraining:
         lap_times_data_selected_features = lap_times_selective_races[
             self.config.get("FEATURE_USED_IN_TRAINING")
         ]
+
+        lap_times_data_selected_features["isPitStop"] = (
+            lap_times_data_selected_features["isPitStop"].astype(int)
+        )
+
+        lap_times_data_selected_features = self.create_cumulative_pit_stop_indicator(
+            feature_df=lap_times_data_selected_features
+        )
+
+        lap_times_data_selected_features["lapDifference"] = (
+            lap_times_data_selected_features.groupby(["raceId"])["milliseconds"].diff()
+        )
+        lap_times_data_selected_features["lapDifference"] = (
+            lap_times_data_selected_features["lapDifference"].fillna(0)
+        )
 
         lap_times_data_selected_features = self.add_lagged_features(
             feature_dataframe=lap_times_data_selected_features
@@ -124,47 +147,25 @@ class engineerFeaturesForTraining:
 class splitData:
 
     def train_test_split(
-        self, data: pd.DataFrame, race_id: str
+        self, data: pd.DataFrame, race_id_list: List
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """select a race event as a test set to show the real life scenario"""
 
-        test_data = data[data["raceId"] == race_id]
+        test_data = data[data["raceId"].isin(race_id_list)]
         test_data = test_data.reset_index(drop=True)
 
-        train_data = data[data["raceId"] != race_id]
+        train_data = data[~data["raceId"].isin(race_id_list)]
         train_data = train_data.reset_index(drop=True)
 
         return train_data, test_data
 
     def train_validation_split(
-        self, train_data: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        self, x_sequential_ls: List, y_sequential_ls: List
+    ) -> Tuple[List, List, List, List]:
         """create a split so that train set consist of 80% of that laps"""
 
-        train_set_ls = []
-        validation_set_ls = []
+        x_train, x_val, y_train, y_val = train_test_split(
+            x_sequential_ls, y_sequential_ls, train_size=0.8
+        )
 
-        for race_id in train_data["raceId"].unique():
-
-            train_data_by_race_id = train_data[train_data["raceId"] == race_id]
-
-            train_data_by_race_id = train_data_by_race_id.sort_values(by=["lap"])
-
-            train_data_by_race_id = train_data_by_race_id.reset_index(drop=True)
-
-            split_point = int(train_data_by_race_id.shape[0] * 0.8)
-
-            train_set = train_data_by_race_id.iloc[:split_point]
-
-            validation_set = train_data_by_race_id.iloc[split_point:]
-
-            train_set = train_set.reset_index(drop=True)
-            validation_set = validation_set.reset_index(drop=True)
-
-            train_set_ls.append(train_set)
-            validation_set_ls.append(validation_set)
-
-        train_set_df = pd.concat(train_set_ls, axis=0)
-        validation_set_df = pd.concat(validation_set_ls, axis=0)
-
-        return train_set_df, validation_set_df
+        return x_train, x_val, y_train, y_val

@@ -36,7 +36,7 @@ class makeInference:
 
     def model_fn(self):
         """Load model"""
-        with open(f"{self.config.get('MODEL_PATH')}model.pkl", "rb") as f:
+        with open(f"{self.config.get('MODEL_PATH')}best_model.pkl", "rb") as f:
             loaded_model = pickle.load(f)
         return loaded_model
 
@@ -59,6 +59,8 @@ class makeInference:
         x_sequential, y_sequential, lap_sequential = self.transfrom_data(data=test_data)
 
         lstm_model = self.model_fn()
+
+        lstm_model.train(False)
 
         input_tensor = torch.Tensor(x_sequential)
 
