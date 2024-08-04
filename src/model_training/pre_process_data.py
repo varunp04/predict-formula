@@ -49,7 +49,6 @@ class processData:
             "circuitId"
         )["milliseconds"].transform(lambda x: x.fillna(x.mean()))
 
-        
         return master_lap_time_data
 
     def add_pitstop_data(

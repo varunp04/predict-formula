@@ -3,19 +3,20 @@ import pandas as pd
 from typing import Dict, List, Tuple
 from transform import tranformDataInference
 import torch
-import numpy as np
+
 
 class makeInference:
-    def __init__(self, config: Dict) -> None:
+    def __init__(self, config: Dict, best_params: Dict) -> None:
 
         self.config = config
         self.TARGET_COLUMN = self.config.get("TARGET_COLUMN")
+        self.best_params = best_params
 
     def transfrom_data(self, data: pd.DataFrame) -> Tuple[List, List]:
         """Transform the data for inference"""
 
         transform_obj = tranformDataInference(
-            n_steps_input=self.config.get("NUMBER_OF_HISTORICAL_LAP"),
+            n_steps_input=self.best_params["NUMBER_OF_HISTORICAL_LAP"],
             n_steps_output=self.config.get("N_STEP_OUTPUT"),
             config=self.config,
         )
@@ -43,14 +44,13 @@ class makeInference:
     def inverse_transform_predictions(self, predictions: torch.Tensor) -> torch.Tensor:
         """Load scaler dict to inverse transform the predictions"""
 
-        with open(f"{self.config.get('MODEL_PATH')}scaler_dict.pkl", "rb") as f:
+        with open(f"{self.config.get('MODEL_PATH')}best_scaler_dict.pkl", "rb") as f:
             scaler_dict = pickle.load(f)
 
         transformed_predictions = scaler_dict[
             f"{self.TARGET_COLUMN}_scaler"
         ].inverse_transform(predictions)
 
-        transformed_predictions_exponential = np.expm1(transformed_predictions)
         return transformed_predictions
 
     def perform_inference(self, test_data: pd.DataFrame, device: str):
@@ -68,7 +68,7 @@ class makeInference:
             input_tensor,
             (
                 input_tensor.shape[0],
-                self.config.get("NUMBER_OF_HISTORICAL_LAP"),
+                self.best_params["NUMBER_OF_HISTORICAL_LAP"],
                 input_tensor.shape[2],
             ),
         )
@@ -77,8 +77,6 @@ class makeInference:
 
         with torch.no_grad():
             predictions = lstm_model(input_tensor, device=device)
-
-        print(predictions)
 
         inverse_transformed_preds = self.inverse_transform_predictions(
             predictions=predictions

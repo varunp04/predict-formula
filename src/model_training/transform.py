@@ -37,7 +37,6 @@ class transformData:
 
         return column_scaled, column_scaler
 
-
     def perform_min_max_scaler(
         self, data: pd.DataFrame, columns_list: List
     ) -> Tuple[np.ndarray, MinMaxScaler]:
@@ -65,45 +64,52 @@ class transformData:
 
         ## date scaler
 
-        # ls_all_scaled_columns.append("day")
+        if "day" in data.columns:
 
-        # scaled_df["day_scaled"] = scaler_dict["day_scaler"].transform(data[["day"]])
+            ls_all_scaled_columns.append("day")
+
+            scaled_df["day_scaled"] = scaler_dict["day_scaler"].transform(data[["day"]])
 
         ## minmax scaler columns
 
         for column_name in self.config.get("MINMAX_SCALING_COLUMNS"):
 
-            ls_all_scaled_columns.append(column_name)
+            if column_name in data.columns:
 
-            scaled_df[f"{column_name}_scaled"] = scaler_dict[
-                f"{column_name}_scaler"
-            ].transform(data[[column_name]])
+                ls_all_scaled_columns.append(column_name)
+
+                scaled_df[f"{column_name}_scaled"] = scaler_dict[
+                    f"{column_name}_scaler"
+                ].transform(data[[column_name]])
 
         ## Robust scaling
 
         for column_name in self.config.get("ROBUST_SCALING"):
+            if column_name in data.columns:
 
-            ls_all_scaled_columns.append(column_name)
+                ls_all_scaled_columns.append(column_name)
 
-            scaled_df[f"{column_name}_scaled"] = scaler_dict[
-                f"{column_name}_scaler"
-            ].transform(data[[column_name]])
+                scaled_df[f"{column_name}_scaled"] = scaler_dict[
+                    f"{column_name}_scaler"
+                ].transform(data[[column_name]])
 
         ## month scaler
 
-        # ls_all_scaled_columns.append("month")
+        if "month" in data.columns:
 
-        # scaled_df["month_sin"], scaled_df["month_cos"] = self.scale_month_column(
-        #     data["month"]
-        # )
+            ls_all_scaled_columns.append("month")
+
+            scaled_df["month_sin"], scaled_df["month_cos"] = self.scale_month_column(
+                data["month"]
+            )
 
         ## target scaler
 
         ls_all_scaled_columns.append(self.TARGET_COLUMN)
 
         scaled_df[f"{self.TARGET_COLUMN}_scaled"] = scaler_dict[
-                f"{self.TARGET_COLUMN}_scaler"
-            ].transform(data[[self.TARGET_COLUMN]])
+            f"{self.TARGET_COLUMN}_scaler"
+        ].transform(data[[self.TARGET_COLUMN]])
 
         return scaled_df, ls_all_scaled_columns
 
@@ -127,42 +133,51 @@ class transformData:
 
         ## date scaler
 
-        # day_scaler = StandardScaler()
-        # ls_all_scaled_columns.append("day")
+        if "day" in data.columns:
+            day_scaler = StandardScaler()
+            ls_all_scaled_columns.append("day")
 
-        # day_column_scaled = day_scaler.fit_transform(data[["day"]])
+            day_column_scaled = day_scaler.fit_transform(data[["day"]])
 
-        # scaler_dict["day_scaler"] = day_scaler
+            scaler_dict["day_scaler"] = day_scaler
 
-        # scaled_df["day_scaled"] = day_column_scaled
+            scaled_df["day_scaled"] = day_column_scaled
 
         ## minmax scaler columns
 
         for column_name in self.config.get("MINMAX_SCALING_COLUMNS"):
 
-            ls_all_scaled_columns.append(column_name)
+            if column_name in data.columns:
 
-            scaled_df[f"{column_name}_scaled"], scaler_dict[f"{column_name}_scaler"] = (
-                self.perform_min_max_scaler(data=data, columns_list=[column_name])
-            )
+                ls_all_scaled_columns.append(column_name)
+
+                (
+                    scaled_df[f"{column_name}_scaled"],
+                    scaler_dict[f"{column_name}_scaler"],
+                ) = self.perform_min_max_scaler(data=data, columns_list=[column_name])
 
         ## robust scaler
 
         for column_name in self.config.get("ROBUST_SCALING"):
 
-            ls_all_scaled_columns.append(column_name)
+            if column_name in data.columns:
 
-            scaled_df[f"{column_name}_scaled"], scaler_dict[f"{column_name}_scaler"] = (
-                self.perform_robust_scaler(data=data, columns_list=[column_name])
-            )
+                ls_all_scaled_columns.append(column_name)
+
+                (
+                    scaled_df[f"{column_name}_scaled"],
+                    scaler_dict[f"{column_name}_scaler"],
+                ) = self.perform_robust_scaler(data=data, columns_list=[column_name])
 
         ## month scaler
 
-        # ls_all_scaled_columns.append("month")
+        if "month" in data.columns:
 
-        # scaled_df["month_sin"], scaled_df["month_cos"] = self.scale_month_column(
-        #     data["month"]
-        # )
+            ls_all_scaled_columns.append("month")
+
+            scaled_df["month_sin"], scaled_df["month_cos"] = self.scale_month_column(
+                data["month"]
+            )
 
         ## target scaler
 
@@ -221,7 +236,7 @@ class transformData:
                 artifact=scaler_dict,
             )
 
-            return scaled_input_df, scaled_output_df
+            return scaled_input_df, scaled_output_df, scaler_dict
 
         else:
 
@@ -283,7 +298,7 @@ class tranformDataInference(transformData):
 
         columns_list = data.columns
 
-        with open(f"{self.config.get('MODEL_PATH')}scaler_dict.pkl", "rb") as f:
+        with open(f"{self.config.get('MODEL_PATH')}best_scaler_dict.pkl", "rb") as f:
             scaler_dict = pickle.load(f)
 
         scaled_df, all_scaled_columns = self.scale_data_validation(

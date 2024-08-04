@@ -3,7 +3,6 @@ from typing import Dict, Tuple
 from torch.utils.data import Dataset
 
 
-
 class gatherData:
 
     def __init__(self, config: Dict) -> None:
@@ -33,7 +32,6 @@ class gatherData:
             self.config.get("DATA_FOLDER") + "sprint_results.csv"
         )
         status_df = pd.read_csv(self.config.get("DATA_FOLDER") + "status.csv")
-
 
         return (
             lap_times_df,
