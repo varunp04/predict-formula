@@ -85,7 +85,6 @@ MINIMUM_LAPS_IN_GP: 8
 MINMAX_SCALING_COLUMNS:
   - lap
   - position_1_prior_lap
-  # - pitStopMilliseconds_1_prior
 
 ROBUST_SCALING:
   - milliseconds_1_prior

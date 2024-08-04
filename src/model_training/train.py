@@ -128,7 +128,7 @@ class train:
         x_validation: torch.Tensor,
         y_validation: torch.Tensor,
         device: str,
-    ) -> Tuple[float, float, LSTM]:
+    ) -> Tuple[float, float, LSTM, List, List]:
         """return validation loss and train loss for the model with the parameters"""
 
         train_data_loader, validation_data_loader = self.create_data_loader(
@@ -170,4 +170,6 @@ class train:
             sum(validation_loss_ls) / len(validation_loss_ls),
             sum(ls_train_loss) / len(ls_train_loss),
             model,
+            validation_loss_ls,
+            ls_train_loss,
         )

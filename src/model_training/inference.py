@@ -5,6 +5,7 @@ from transform import tranformDataInference
 import torch
 import numpy as np
 
+
 class makeInference:
     def __init__(self, config: Dict) -> None:
 

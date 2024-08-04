@@ -37,7 +37,6 @@ class transformData:
 
         return column_scaled, column_scaler
 
-
     def perform_min_max_scaler(
         self, data: pd.DataFrame, columns_list: List
     ) -> Tuple[np.ndarray, MinMaxScaler]:
@@ -102,8 +101,8 @@ class transformData:
         ls_all_scaled_columns.append(self.TARGET_COLUMN)
 
         scaled_df[f"{self.TARGET_COLUMN}_scaled"] = scaler_dict[
-                f"{self.TARGET_COLUMN}_scaler"
-            ].transform(data[[self.TARGET_COLUMN]])
+            f"{self.TARGET_COLUMN}_scaler"
+        ].transform(data[[self.TARGET_COLUMN]])
 
         return scaled_df, ls_all_scaled_columns
 
